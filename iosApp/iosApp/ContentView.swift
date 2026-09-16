@@ -3,9 +3,10 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var showContent = false
+
     var body: some View {
         VStack {
-            Button("Click me!") {
+            Button("Play me") {
                 withAnimation {
                     showContent = !showContent
                 }
@@ -21,7 +22,7 @@ struct ContentView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .padding()
     }
 }
