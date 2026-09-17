@@ -17,8 +17,13 @@ dependencies {
 
     implementation(libs.compose.uiToolingPreview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.foundation)
     debugImplementation(libs.compose.uiTooling)
     implementation(libs.compose.material3)
+    implementation(platform("androidx.compose:compose-bom:2024.09.00"))
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.room3.runtime)
 }
 
 android {
