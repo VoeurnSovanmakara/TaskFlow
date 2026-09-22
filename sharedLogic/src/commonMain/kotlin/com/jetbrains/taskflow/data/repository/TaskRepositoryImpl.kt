@@ -16,6 +16,7 @@ class TaskRepositoryImpl(
         return taskDao
             .observeTasks()
             .map { entities ->
+                println("Room emitted ${entities.size} tasks")
                 entities.map { it.toDomain() }
             }
     }

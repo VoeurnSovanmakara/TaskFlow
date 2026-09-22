@@ -5,7 +5,7 @@ import SharedLogic
 struct iOSApp: App {
 
     init() {
-        KoinIosKt.initKoinIos()
+        KoinIosKt.doInitKoinIos()
     }
 
     var body: some Scene {
