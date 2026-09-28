@@ -3,6 +3,7 @@ package com.jetbrains.taskflow
 import android.app.Application
 import com.jetbrains.taskflow.data.database.getDatabaseBuilder
 import com.jetbrains.taskflow.di.initKoin
+import com.jetbrains.taskflow.di.viewModelModule
 
 class TaskFlowApplication : Application() {
 
@@ -10,7 +11,10 @@ class TaskFlowApplication : Application() {
         super.onCreate()
 
         initKoin(
-            databaseBuilder = getDatabaseBuilder(this)
+            databaseBuilder = getDatabaseBuilder(this),
+            additionalModules = listOf(
+                viewModelModule,
+            ),
         )
     }
 }

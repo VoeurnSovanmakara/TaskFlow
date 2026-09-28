@@ -1,4 +1,4 @@
-package com.jetbrains.taskflow.presentation.task
+package com.jetbrains.taskflow.presentation.task.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,67 +6,25 @@ import com.jetbrains.taskflow.domain.model.Task
 import com.jetbrains.taskflow.domain.model.TaskPriority
 import com.jetbrains.taskflow.domain.model.TaskStatus
 import com.jetbrains.taskflow.domain.usecase.CreateTaskUseCase
-import com.jetbrains.taskflow.domain.usecase.ObserveTasksUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import kotlin.time.Clock
-import kotlin.time.Instant
+import kotlin.uuid.Uuid
 
-class TaskViewModel(
-    private val observeTasksUseCase: ObserveTasksUseCase,
+class CreateTaskViewModel(
     private val createTaskUseCase: CreateTaskUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TaskListUiState())
-    val uiState: StateFlow<TaskListUiState> = _uiState.asStateFlow()
-    private val _createTaskUiState = MutableStateFlow(CreateTaskUiState())
-    val createTaskUiState: StateFlow<CreateTaskUiState> = _createTaskUiState.asStateFlow()
+    private val _uiState = MutableStateFlow(CreateTaskUiState())
 
-    init {
-        observeTasks()
-    }
-
-    private fun observeTasks() {
-        viewModelScope.launch {
-            observeTasksUseCase()
-                .onStart {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = true,
-                            error = null
-                        )
-                    }
-                }
-                .catch { throwable ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = throwable.message ?: "Failed to load tasks"
-                        )
-                    }
-                }
-                .collect { tasks ->
-                    println("ViewModel received ${tasks.size} tasks")
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            tasks = tasks,
-                            error = null
-                        )
-                    }
-                }
-        }
-    }
+    val uiState: StateFlow<CreateTaskUiState> = _uiState.asStateFlow()
 
     fun onTitleChanged(title: String) {
-        _createTaskUiState.update {
+        _uiState.update {
             it.copy(
                 title = title,
                 error = null
@@ -75,7 +33,7 @@ class TaskViewModel(
     }
 
     fun onDescriptionChanged(description: String) {
-        _createTaskUiState.update {
+        _uiState.update {
             it.copy(
                 description = description,
                 error = null
@@ -84,31 +42,32 @@ class TaskViewModel(
     }
 
     fun onPriorityChanged(priority: TaskPriority) {
-        _createTaskUiState.update {
+        _uiState.update {
             it.copy(priority = priority)
         }
     }
 
     fun onStatusChanged(status: TaskStatus) {
-        _createTaskUiState.update {
+        _uiState.update {
             it.copy(status = status)
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     fun createTask(
         onSuccess: () -> Unit
     ) {
-        val state = _createTaskUiState.value
+        val state = _uiState.value
 
         if (state.title.isBlank()) {
-            _createTaskUiState.update {
+            _uiState.update {
                 it.copy(error = "Title is required")
             }
             return
         }
 
         viewModelScope.launch {
-            _createTaskUiState.update {
+            _uiState.update {
                 it.copy(
                     isSaving = true,
                     error = null
@@ -135,12 +94,12 @@ class TaskViewModel(
 
                 createTaskUseCase(task)
 
-                _createTaskUiState.value = CreateTaskUiState()
+                _uiState.value = CreateTaskUiState()
 
                 onSuccess()
 
             } catch (throwable: Throwable) {
-                _createTaskUiState.update {
+                _uiState.update {
                     it.copy(
                         isSaving = false,
                         error = throwable.message

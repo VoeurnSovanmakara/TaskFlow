@@ -22,6 +22,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.runtimeCompose)
     implementation(libs.koin.core)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
     implementation(libs.androidx.navigation.compose)
 }
