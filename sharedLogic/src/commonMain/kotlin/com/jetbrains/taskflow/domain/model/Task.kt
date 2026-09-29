@@ -1,7 +1,6 @@
 package com.jetbrains.taskflow.domain.model
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
 import kotlinx.datetime.Instant
 
 data class Task(
@@ -11,7 +10,6 @@ data class Task(
     val status: TaskStatus,
     val priority: TaskPriority,
     val dueDate: LocalDate?,
-    val dueTime: LocalTime?,
     val projectId: String?,
     val createdAt: Instant,
     val updatedAt: Instant

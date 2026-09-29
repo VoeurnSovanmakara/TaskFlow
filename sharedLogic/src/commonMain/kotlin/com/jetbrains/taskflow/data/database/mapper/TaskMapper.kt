@@ -5,7 +5,6 @@ import com.jetbrains.taskflow.domain.model.Task
 import com.jetbrains.taskflow.domain.model.TaskPriority
 import com.jetbrains.taskflow.domain.model.TaskStatus
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
 import kotlin.time.Instant
 
 fun TaskEntity.toDomain(): Task {
@@ -16,7 +15,6 @@ fun TaskEntity.toDomain(): Task {
         status = TaskStatus.valueOf(status),
         priority = TaskPriority.valueOf(priority),
         dueDate = dueDate?.let(LocalDate::parse),
-        dueTime = dueTime?.let(LocalTime::parse),
         projectId = projectId,
         createdAt = Instant.fromEpochMilliseconds(createdAt),
         updatedAt = Instant.fromEpochMilliseconds(updatedAt)
@@ -31,7 +29,6 @@ fun Task.toEntity(): TaskEntity {
         status = status.name,
         priority = priority.name,
         dueDate = dueDate?.toString(),
-        dueTime = dueTime?.toString(),
         projectId = projectId,
         createdAt = createdAt.toEpochMilliseconds(),
         updatedAt = updatedAt.toEpochMilliseconds()

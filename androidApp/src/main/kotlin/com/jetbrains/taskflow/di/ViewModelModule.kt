@@ -15,7 +15,8 @@ import org.koin.dsl.module
 val viewModelModule = module {
     viewModel {
         TaskListViewModel(
-            observeTasksUseCase = get<ObserveTasksUseCase>()
+            observeTasksUseCase = get<ObserveTasksUseCase>(),
+            updateTaskUseCase = get<UpdateTaskUseCase>(),
         )
     }
     viewModel {

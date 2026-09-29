@@ -8,6 +8,8 @@ import com.jetbrains.taskflow.core.enum.TaskFilter
 import com.jetbrains.taskflow.core.enum.TaskSort
 import com.jetbrains.taskflow.core.extention.filterBy
 import com.jetbrains.taskflow.core.extention.sortBy
+import com.jetbrains.taskflow.domain.model.TaskStatus
+import com.jetbrains.taskflow.domain.usecase.UpdateTaskUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,9 +20,11 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 class TaskListViewModel(
-    private val observeTasksUseCase: ObserveTasksUseCase
+    private val observeTasksUseCase: ObserveTasksUseCase,
+    private val updateTaskUseCase: UpdateTaskUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(TaskListUiState())
     val uiState: StateFlow<TaskListUiState> = _uiState.asStateFlow()
@@ -83,6 +87,28 @@ class TaskListViewModel(
     fun setSort(sort: TaskSort) {
         _uiState.update {
             it.copy( selectedSort = sort )
+        }
+    }
+
+    fun updateTaskStatus(
+        task: Task,
+        status: TaskStatus,
+    ) {
+        viewModelScope.launch {
+            try {
+                updateTaskUseCase(
+                    task.copy(
+                        status = status,
+                        updatedAt = Clock.System.now()
+                    )
+                )
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        error = e.message ?: "Failed to update task"
+                    )
+                }
+            }
         }
     }
 

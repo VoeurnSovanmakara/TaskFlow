@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.painterResource
 import com.jetbrains.taskflow.R
+import com.jetbrains.taskflow.core.util.toDisplayString
 import com.jetbrains.taskflow.presentation.components.PriorityBadge
 import com.jetbrains.taskflow.presentation.components.StatusBadge
 
@@ -154,25 +155,14 @@ fun TaskDetailScreen(
 
             task.description?.let {
                 DetailCard {
-                    Text(
-                        text = "Description",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    InfoRow(label = "Description", value = it)
                 }
             }
 
-            if (task.dueDate != null || task.dueTime != null) {
+            if (task.dueDate != null) {
                 DetailCard {
                     task.dueDate?.let {
-                        InfoRow(label = "Due date", value = "$it")
-                    }
-                    task.dueTime?.let {
-                        InfoRow(label = "Due time", value = "$it")
+                        InfoRow(label = "Due date", value = it.toDisplayString())
                     }
                 }
             }

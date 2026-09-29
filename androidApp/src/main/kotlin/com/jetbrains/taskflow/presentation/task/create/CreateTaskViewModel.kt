@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
@@ -53,6 +54,12 @@ class CreateTaskViewModel(
         }
     }
 
+    fun setDueDate(dueDate: LocalDate?) {
+        _uiState.update {
+            it.copy(dueDate = dueDate)
+        }
+    }
+
     @OptIn(ExperimentalUuidApi::class)
     fun createTask(
         onSuccess: () -> Unit
@@ -85,8 +92,7 @@ class CreateTaskViewModel(
                         .ifBlank { null },
                     status = state.status,
                     priority = state.priority,
-                    dueDate = null,
-                    dueTime = null,
+                    dueDate = state.dueDate,
                     projectId = null,
                     createdAt = now,
                     updatedAt = now

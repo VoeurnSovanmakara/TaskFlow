@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
 
 class EditTaskViewModel(
@@ -52,6 +53,7 @@ class EditTaskViewModel(
                         description = task.description.orEmpty(),
                         priority = task.priority,
                         status = task.status,
+                        dueDate = task.dueDate,
                         error = null
                     )
                 }
@@ -91,6 +93,12 @@ class EditTaskViewModel(
         }
     }
 
+    fun setDueDate(dueDate: LocalDate?) {
+        _uiState.update {
+            it.copy(dueDate = dueDate)
+        }
+    }
+
     fun updateTask(
         taskId: String,
         onSuccess: () -> Unit
@@ -123,6 +131,7 @@ class EditTaskViewModel(
                         .ifBlank { null },
                     status = _uiState.value.status,
                     priority = _uiState.value.priority,
+                    dueDate = _uiState.value.dueDate,
                     updatedAt = Clock.System.now()
                 )
 

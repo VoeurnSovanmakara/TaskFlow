@@ -5,21 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -28,7 +21,6 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -40,14 +32,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.jetbrains.taskflow.core.enum.TaskFilter
 import com.jetbrains.taskflow.core.enum.TaskSort
+import com.jetbrains.taskflow.core.theme.selectableChipColors
+import com.jetbrains.taskflow.core.util.displayName
 import com.jetbrains.taskflow.domain.model.Task
-import com.jetbrains.taskflow.presentation.components.PriorityBadge
-import com.jetbrains.taskflow.presentation.components.StatusBadge
+import com.jetbrains.taskflow.domain.model.TaskStatus
+import com.jetbrains.taskflow.presentation.components.EmptyFilteredTaskState
+import com.jetbrains.taskflow.presentation.components.EmptyTaskState
+import com.jetbrains.taskflow.presentation.components.TaskCard
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 
 @Composable
 fun TaskListScreen(
@@ -57,6 +56,7 @@ fun TaskListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val displayedTasks by viewModel.displayedTasks.collectAsStateWithLifecycle()
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
     Scaffold(
         topBar = {
@@ -87,6 +87,13 @@ fun TaskListScreen(
             onSortSelected = viewModel::setSort,
             onCreateTask = onCreateTask,
             onTaskClick = onTaskClick,
+            onStatusSelected = { task, status ->
+                viewModel.updateTaskStatus(
+                    task = task,
+                    status = status
+                )
+            },
+            today = today,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -102,6 +109,8 @@ fun TaskListContent(
     onSortSelected: (TaskSort) -> Unit,
     onCreateTask: () -> Unit,
     onTaskClick: (String) -> Unit,
+    today: LocalDate,
+    onStatusSelected: (Task, TaskStatus) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -174,133 +183,18 @@ fun TaskListContent(
                     ) { task ->
                         TaskCard(
                             task = task,
+                            today = today,
                             onClick = {
                                 onTaskClick(task.id)
+                            },
+                            onStatusSelected = { status ->
+                                onStatusSelected(task, status)
                             }
                         )
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun TaskCard(
-    task: Task,
-    onClick: () -> Unit,
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = task.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            task.description?.let { description ->
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            TaskMetaData(task = task)
-        }
-    }
-}
-
-@Composable
-private fun TaskMetaData(task: Task) {
-    Row(
-        modifier = Modifier.padding(top = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        StatusBadge(task.status)
-        PriorityBadge(task.priority)
-    }
-}
-
-@Composable
-private fun EmptyTaskState(
-    onCreateTask: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.padding(32.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ) {
-                Text(
-                    text = "✓",
-                    style = MaterialTheme.typography.headlineLarge,
-                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp)
-                )
-            }
-
-            Text(
-                text = "No tasks yet",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Text(
-                text = "Create your first task to get started",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.width(4.dp))
-
-            Button(
-                onClick = onCreateTask,
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Create task")
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyFilteredTaskState(
-    filter: TaskFilter,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.padding(32.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "No ${filter.displayName().lowercase()} tasks",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
     }
 }
 
@@ -326,7 +220,8 @@ private fun TaskFilterRow(
                         text = filter.displayName()
                     )
                 },
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = selectableChipColors()
             )
         }
     }
@@ -391,23 +286,5 @@ private fun TaskSortRow(
                 }
             }
         }
-    }
-}
-
-private fun TaskFilter.displayName(): String {
-    return when (this) {
-        TaskFilter.ALL -> "All"
-        TaskFilter.TODO -> "Todo"
-        TaskFilter.IN_PROGRESS -> "In Progress"
-        TaskFilter.COMPLETED -> "Completed"
-    }
-}
-
-private fun TaskSort.displayName(): String {
-    return when (this) {
-        TaskSort.CREATED_DATE -> "Created date"
-        TaskSort.DUE_DATE -> "Due date"
-        TaskSort.PRIORITY -> "Priority"
-        TaskSort.TITLE -> "Title"
     }
 }

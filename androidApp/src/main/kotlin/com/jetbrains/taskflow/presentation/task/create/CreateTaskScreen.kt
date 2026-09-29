@@ -2,6 +2,8 @@
 
 package com.jetbrains.taskflow.presentation.task.create
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,8 +19,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
@@ -29,7 +34,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,9 +48,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.painterResource
 import com.jetbrains.taskflow.R
+import com.jetbrains.taskflow.core.util.toDisplayString
 import com.jetbrains.taskflow.domain.model.TaskPriority
 import com.jetbrains.taskflow.domain.model.TaskStatus
 import com.jetbrains.taskflow.presentation.components.prettyName
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 private val FieldShape = RoundedCornerShape(16.dp)
 
@@ -54,6 +66,16 @@ fun CreateTaskScreen(
     onBack: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val dueDateInteractionSource = remember { MutableInteractionSource() }
+    LaunchedEffect(dueDateInteractionSource) {
+        dueDateInteractionSource.interactions.collect { interaction ->
+            if (interaction is PressInteraction.Release) {
+                showDatePicker = true
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -114,6 +136,31 @@ fun CreateTaskScreen(
                 onStatusSelected = viewModel::onStatusChanged
             )
 
+            OutlinedTextField(
+                value = state.dueDate?.toDisplayString() ?: "",
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Due date") },
+                placeholder = { Text("Select due date") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = FieldShape,
+                singleLine = true,
+                interactionSource = dueDateInteractionSource,
+                trailingIcon = if (state.dueDate != null) {
+                    {
+                        TextButton(
+                            onClick = {
+                                viewModel.setDueDate(null)
+                            }
+                        ) {
+                            Text("Clear")
+                        }
+                    }
+                } else {
+                    null
+                }
+            )
+
             state.error?.let { error ->
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -158,6 +205,49 @@ fun CreateTaskScreen(
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
+        }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+
+        DatePickerDialog(
+            onDismissRequest = {
+                showDatePicker = false
+            },
+            shape = RoundedCornerShape(28.dp),
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+
+                            val date = Instant
+                                .fromEpochMilliseconds(millis)
+                                .toLocalDateTime(TimeZone.UTC)
+                                .date
+
+                            viewModel.setDueDate(date)
+                        }
+
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState
+            )
         }
     }
 }
@@ -212,7 +302,7 @@ private fun <T> TaskDropDown(
             shape = FieldShape,
             modifier = Modifier
                 .fillMaxWidth()
-                .menuAnchor(),
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
             label = { Text(label) },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
