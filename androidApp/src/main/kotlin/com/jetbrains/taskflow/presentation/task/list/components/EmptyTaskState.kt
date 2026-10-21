@@ -1,4 +1,4 @@
-package com.jetbrains.taskflow.presentation.components
+package com.jetbrains.taskflow.presentation.task.list.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

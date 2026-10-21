@@ -1,4 +1,4 @@
-package com.jetbrains.taskflow.presentation.components
+package com.jetbrains.taskflow.presentation.task.list.components
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import com.jetbrains.taskflow.core.enum.TaskDeadlineStatus
 import com.jetbrains.taskflow.core.util.deadlineStatus
 import com.jetbrains.taskflow.domain.model.Task
+import com.jetbrains.taskflow.presentation.share.TaskBadge
 import kotlinx.datetime.LocalDate
 
 @Composable

@@ -8,6 +8,7 @@ import com.jetbrains.taskflow.core.enum.TaskFilter
 import com.jetbrains.taskflow.core.enum.TaskSort
 import com.jetbrains.taskflow.core.extention.filterBy
 import com.jetbrains.taskflow.core.extention.sortBy
+import com.jetbrains.taskflow.domain.model.TaskPriority
 import com.jetbrains.taskflow.domain.model.TaskStatus
 import com.jetbrains.taskflow.domain.usecase.UpdateTaskUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -106,6 +107,28 @@ class TaskListViewModel(
                 _uiState.update {
                     it.copy(
                         error = e.message ?: "Failed to update task"
+                    )
+                }
+            }
+        }
+    }
+
+    fun updateTaskPriority(
+        task: Task,
+        priority: TaskPriority,
+    ) {
+        viewModelScope.launch {
+            try {
+                updateTaskUseCase(
+                    task.copy(
+                        priority = priority,
+                        updatedAt = Clock.System.now()
+                    )
+                )
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        error = e.message ?: "Failed to update task priority"
                     )
                 }
             }

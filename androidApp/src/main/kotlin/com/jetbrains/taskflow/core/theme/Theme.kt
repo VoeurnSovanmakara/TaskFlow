@@ -3,7 +3,6 @@ package com.jetbrains.taskflow.core.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -20,85 +19,83 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // ---------- Colors ----------
-// Palette: #222831 charcoal, #393E46 slate, #FFD369 gold, #EEEEEE light gray.
-// Dark theme = charcoal background, slate cards, gold accent.
-// Light theme = light gray background, white cards, charcoal buttons with gold highlights.
-// Badge mapping (see TaskBadges.kt): TODO = gray, IN PROGRESS = gold, COMPLETED = green, HIGH = red.
+// Palette: "Kinetic Focus" — #5B4DFF primary (indigo-violet), #8B5CF6 secondary (purple),
+// #10B981 tertiary (emerald), #64748B neutral (slate, used for outlines/surfaces).
+// Badge mapping (see TaskBadges.kt): TODO = purple, IN PROGRESS = indigo, COMPLETED = emerald, HIGH = red.
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF222831),
-    onPrimary = Color(0xFFEEEEEE),
-    primaryContainer = Color(0xFFFFD369),
-    onPrimaryContainer = Color(0xFF222831),
-    secondary = Color(0xFF393E46),
-    onSecondary = Color(0xFFEEEEEE),
-    secondaryContainer = Color(0xFFE0E2E6),
-    onSecondaryContainer = Color(0xFF222831),
-    tertiary = Color(0xFF2E7D4F),
+    primary = Color(0xFF5B4DFF),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFE1DEFF),
+    onPrimaryContainer = Color(0xFF190085),
+    secondary = Color(0xFF8B5CF6),
+    onSecondary = Color(0xFFFFFFFF),
+    secondaryContainer = Color(0xFFEDE1FE),
+    onSecondaryContainer = Color(0xFF2C0A73),
+    tertiary = Color(0xFF10B981),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFCDEBD6),
-    onTertiaryContainer = Color(0xFF0B2E1B),
+    tertiaryContainer = Color(0xFFC3F3DE),
+    onTertiaryContainer = Color(0xFF00210F),
     error = Color(0xFFBA1A1A),
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
-    background = Color(0xFFEEEEEE),
-    onBackground = Color(0xFF222831),
-    surface = Color(0xFFEEEEEE),
-    onSurface = Color(0xFF222831),
-    surfaceVariant = Color(0xFFDDE0E5),
-    onSurfaceVariant = Color(0xFF393E46),
-    outline = Color(0xFF6B717A),
-    outlineVariant = Color(0xFFC5C9CF),
-    inverseSurface = Color(0xFF222831),
-    inverseOnSurface = Color(0xFFEEEEEE),
-    inversePrimary = Color(0xFFFFD369),
-    surfaceTint = Color(0xFF222831),
-    surfaceDim = Color(0xFFDCDCDC),
-    surfaceBright = Color(0xFFFFFFFF),
+    background = Color(0xFFF8F8FC),
+    onBackground = Color(0xFF1B1B23),
+    surface = Color(0xFFF8F8FC),
+    onSurface = Color(0xFF1B1B23),
+    surfaceVariant = Color(0xFFE2E4EF),
+    onSurfaceVariant = Color(0xFF45464F),
+    outline = Color(0xFF64748B),
+    outlineVariant = Color(0xFFC7CAD6),
+    inverseSurface = Color(0xFF2F3038),
+    inverseOnSurface = Color(0xFFF1F0F7),
+    inversePrimary = Color(0xFFC5C0FF),
+    surfaceTint = Color(0xFF5B4DFF),
+    surfaceDim = Color(0xFFD9D9E3),
+    surfaceBright = Color(0xFFF8F8FC),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFFFFFFF),
-    surfaceContainer = Color(0xFFF8F8F8),
-    surfaceContainerHigh = Color(0xFFF3F3F3),
-    surfaceContainerHighest = Color(0xFFE6E6E6),
+    surfaceContainerLow = Color(0xFFF2F1F9),
+    surfaceContainer = Color(0xFFECEBF3),
+    surfaceContainerHigh = Color(0xFFE6E5EE),
+    surfaceContainerHighest = Color(0xFFE0DFE8),
 )
-
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFFFD369),
-    onPrimary = Color(0xFF222831),
-    primaryContainer = Color(0xFF5A4A1C),
-    onPrimaryContainer = Color(0xFFFFD369),
-    secondary = Color(0xFFB9BEC6),
-    onSecondary = Color(0xFF222831),
-    secondaryContainer = Color(0xFF4E545D),
-    onSecondaryContainer = Color(0xFFEEEEEE),
-    tertiary = Color(0xFF8FD9A0),
-    onTertiary = Color(0xFF0F3A20),
-    tertiaryContainer = Color(0xFF2E5A3D),
-    onTertiaryContainer = Color(0xFFC9F0D3),
+    primary = Color(0xFFC5C0FF),
+    onPrimary = Color(0xFF2A1B9E),
+    primaryContainer = Color(0xFF4232C7),
+    onPrimaryContainer = Color(0xFFE1DEFF),
+    secondary = Color(0xFFD3BBFC),
+    onSecondary = Color(0xFF3E1C82),
+    secondaryContainer = Color(0xFF6A3DD1),
+    onSecondaryContainer = Color(0xFFEDE1FE),
+    tertiary = Color(0xFF7CE0B4),
+    onTertiary = Color(0xFF00391E),
+    tertiaryContainer = Color(0xFF00522E),
+    onTertiaryContainer = Color(0xFFC3F3DE),
     error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005),
-    errorContainer = Color(0xFF7A2E2E),
+    errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
-    background = Color(0xFF222831),
-    onBackground = Color(0xFFEEEEEE),
-    surface = Color(0xFF222831),
-    onSurface = Color(0xFFEEEEEE),
-    surfaceVariant = Color(0xFF393E46),
-    onSurfaceVariant = Color(0xFFC9CCD1),
-    outline = Color(0xFF8A9099),
-    outlineVariant = Color(0xFF4A5058),
-    inverseSurface = Color(0xFFEEEEEE),
-    inverseOnSurface = Color(0xFF222831),
-    inversePrimary = Color(0xFF7A5C00),
-    surfaceTint = Color(0xFFFFD369),
-    surfaceDim = Color(0xFF1D2229),
-    surfaceBright = Color(0xFF4E545D),
-    surfaceContainerLowest = Color(0xFF1D2229),
-    surfaceContainerLow = Color(0xFF393E46),
-    surfaceContainer = Color(0xFF3F454E),
-    surfaceContainerHigh = Color(0xFF454B54),
-    surfaceContainerHighest = Color(0xFF4E545D),
+    background = Color(0xFF131318),
+    onBackground = Color(0xFFE4E3EC),
+    surface = Color(0xFF131318),
+    onSurface = Color(0xFFE4E3EC),
+    surfaceVariant = Color(0xFF45464F),
+    onSurfaceVariant = Color(0xFFC7C5D0),
+    outline = Color(0xFF919099),
+    outlineVariant = Color(0xFF45464F),
+    inverseSurface = Color(0xFFE4E3EC),
+    inverseOnSurface = Color(0xFF2F3038),
+    inversePrimary = Color(0xFF5B4DFF),
+    surfaceTint = Color(0xFFC5C0FF),
+    surfaceDim = Color(0xFF131318),
+    surfaceBright = Color(0xFF39393F),
+    surfaceContainerLowest = Color(0xFF0E0E13),
+    surfaceContainerLow = Color(0xFF1B1B23),
+    surfaceContainer = Color(0xFF1F1F27),
+    surfaceContainerHigh = Color(0xFF2A2A32),
+    surfaceContainerHighest = Color(0xFF35353D),
 )
 
 // ---------- Typography ----------
@@ -163,10 +160,8 @@ fun TaskFlowTheme(
     )
 }
 
-// Selected filter chips use the gold container instead of the default gray.
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun selectableChipColors() = FilterChipDefaults.filterChipColors(
-    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
 )

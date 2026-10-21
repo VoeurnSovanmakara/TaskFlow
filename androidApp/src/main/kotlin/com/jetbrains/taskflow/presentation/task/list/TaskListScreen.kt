@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -19,10 +22,13 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,19 +36,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.jetbrains.taskflow.R
 import com.jetbrains.taskflow.core.enum.TaskFilter
 import com.jetbrains.taskflow.core.enum.TaskSort
 import com.jetbrains.taskflow.core.theme.selectableChipColors
 import com.jetbrains.taskflow.core.util.displayName
 import com.jetbrains.taskflow.domain.model.Task
+import com.jetbrains.taskflow.domain.model.TaskPriority
 import com.jetbrains.taskflow.domain.model.TaskStatus
-import com.jetbrains.taskflow.presentation.components.EmptyFilteredTaskState
-import com.jetbrains.taskflow.presentation.components.EmptyTaskState
-import com.jetbrains.taskflow.presentation.components.TaskCard
+import com.jetbrains.taskflow.presentation.task.list.components.EmptyFilteredTaskState
+import com.jetbrains.taskflow.presentation.task.list.components.EmptyTaskState
+import com.jetbrains.taskflow.presentation.task.list.components.TaskCard
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -57,8 +67,10 @@ fun TaskListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val displayedTasks by viewModel.displayedTasks.collectAsStateWithLifecycle()
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = {
@@ -69,13 +81,25 @@ fun TaskListScreen(
                         ),
                     )
                 },
+                actions = {
+                    IconButton(onClick = {}) {
+                        Icon(painter = painterResource(R.drawable.search), contentDescription = null)
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                )
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onCreateTask
             ) {
-                Text("+ New task")
+                Icon(painter = painterResource(R.drawable.add), contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("New task")
             }
         }
     ) { paddingValues ->
@@ -92,6 +116,12 @@ fun TaskListScreen(
                     task = task,
                     status = status
                 )
+            },
+            onPrioritySelected = { task, priority ->
+              viewModel.updateTaskPriority(
+                  task = task,
+                  priority = priority
+              )
             },
             today = today,
             modifier = Modifier
@@ -111,6 +141,7 @@ fun TaskListContent(
     onTaskClick: (String) -> Unit,
     today: LocalDate,
     onStatusSelected: (Task, TaskStatus) -> Unit,
+    onPrioritySelected: (Task, TaskPriority) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -189,6 +220,9 @@ fun TaskListContent(
                             },
                             onStatusSelected = { status ->
                                 onStatusSelected(task, status)
+                            },
+                            onPrioritySelected = { priority ->
+                                onPrioritySelected(task, priority)
                             }
                         )
                     }
@@ -249,10 +283,7 @@ private fun TaskSortRow(
                     Text("Sort: ${selectedSort.displayName()}")
                 },
                 trailingIcon = {
-                    Text(
-                        text = "▾",
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    Icon(painter = painterResource(R.drawable.arrow_drop_down), contentDescription = null)
                 }
             )
 
@@ -268,15 +299,22 @@ private fun TaskSortRow(
 
                     DropdownMenuItem(
                         text = {
-                            Text(
-                                text = sort.displayName(),
-                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                                color = if (selected) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                }
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = sort.displayName(),
+                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (selected) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    }
+                                )
+                                if (selected) Icon(painter = painterResource(R.drawable.check_small), contentDescription = null)
+                            }
                         },
                         onClick = {
                             onSortSelected(sort)
