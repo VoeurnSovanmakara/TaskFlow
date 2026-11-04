@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 class TaskUpdater(
     private val updateTaskUseCase: UpdateTaskUseCase
@@ -23,7 +24,8 @@ class TaskUpdater(
         priority: String,
         status: String,
         dueDate: String?,
-        onSuccess: () -> Unit,
+        reminderAt: String?,
+        onSuccess: (String) -> Unit,
         onError: (String) -> Unit
     ) {
         scope.launch {
@@ -38,11 +40,12 @@ class TaskUpdater(
                     dueDate = dueDate
                         ?.takeIf { it.isNotBlank() }
                         ?.let { LocalDate.parse(it) },
+                    reminderAt = reminderAt?.let { Instant.parse(it) },
                     updatedAt = Clock.System.now()
                 )
 
                 updateTaskUseCase(updatedTask)
-                onSuccess()
+                onSuccess(updatedTask.id)
             } catch (e: Exception) {
                 onError(e.message ?: "Failed to update task.")
             }

@@ -162,7 +162,10 @@ final class TasksViewModel {
             dueDate: task.dueDate.map {
                 String(describing: $0)
             },
-            onSuccess: { [weak self] in
+            reminderAt: task.reminderAt.map {
+                String(describing: $0)
+            },
+            onSuccess: { [weak self] _ in
                 _Concurrency.Task { @MainActor in
                     self?.isUpdatingTask = false
                 }

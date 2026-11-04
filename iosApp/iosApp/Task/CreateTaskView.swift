@@ -17,8 +17,17 @@ struct CreateTaskView: View {
     @State private var status: TaskStatusOption = .todo
     @State private var hasDueDate = false
     @State private var dueDate = Date()
+    @State private var hasReminder = false
+    @State private var reminderDate = Calendar.current.date(
+        byAdding: .hour,
+        value: 1,
+        to: Date()
+    ) ?? Date()
     @State private var errorMessage: String?
     @State private var isSaving = false
+
+    @State private var reminderSaveError: String?
+    @State private var showReminderSaveAlert = false
 
     @State private var showDateSheet = false
     @FocusState private var titleFocused: Bool
@@ -28,6 +37,12 @@ struct CreateTaskView: View {
 
     private var isEditing: Bool {
         task != nil
+    }
+
+    private var formattedReminderDate: String? {
+        guard hasReminder else { return nil }
+
+        return ISO8601DateFormatter().string(from: reminderDate)
     }
 
     // MARK: - Logic (unchanged)
@@ -59,11 +74,31 @@ struct CreateTaskView: View {
         isSaving = true
         errorMessage = nil
 
-        let onSuccess: () -> Void = {
+        let onSuccess: (String) -> Void = { taskID in
             _Concurrency.Task { @MainActor in
                 isSaving = false
-                onCreated()
-                dismiss()
+
+                do {
+                    if hasReminder {
+                        try await TaskReminderNotificationManager.shared.scheduleReminder(
+                            taskID: taskID,
+                            title: trimmedTitle,
+                            reminderDate: reminderDate
+                        )
+                    } else {
+                        TaskReminderNotificationManager.shared.cancelReminder(
+                            taskID: taskID
+                        )
+                    }
+
+                    // Refresh the task list and close the form.
+                    onCreated()
+                    dismiss()
+
+                } catch {
+                    reminderSaveError = error.localizedDescription
+                    showReminderSaveAlert = true
+                }
             }
         }
 
@@ -84,6 +119,7 @@ struct CreateTaskView: View {
                 priority: priority.rawValue,
                 status: status.rawValue,
                 dueDate: formattedDueDate,
+                reminderAt: formattedReminderDate,
                 onSuccess: onSuccess,
                 onError: onError
             )
@@ -94,6 +130,7 @@ struct CreateTaskView: View {
                 priority: priority.rawValue,
                 status: status.rawValue,
                 dueDate: formattedDueDate,
+                reminderAt: formattedReminderDate,
                 onSuccess: onSuccess,
                 onError: onError
             )
@@ -128,6 +165,26 @@ struct CreateTaskView: View {
             }
         } else {
             hasDueDate = false
+        }
+
+        if let reminder = task.reminderAt {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [
+                .withInternetDateTime,
+                .withFractionalSeconds
+            ]
+
+            let parsedDate = formatter.date(from: String(describing: reminder))
+                ?? ISO8601DateFormatter().date(
+                from: String(describing: reminder)
+            )
+
+            if let parsedDate {
+                reminderDate = parsedDate
+                hasReminder = true
+            }
+        } else {
+            hasReminder = false
         }
     }
 
@@ -166,6 +223,29 @@ struct CreateTaskView: View {
                     .padding(.horizontal, 20)
 
                     dueSection
+
+                    section("Reminder") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Toggle("Set a reminder", isOn: $hasReminder)
+                                .font(.subheadline.weight(.medium))
+                                .tint(Palette.accent)
+
+                            if hasReminder {
+                                DatePicker(
+                                    "Remind me",
+                                    selection: $reminderDate,
+                                    in: Date()...,
+                                    displayedComponents: [.date, .hourAndMinute]
+                                )
+                                    .datePickerStyle(.compact)
+
+                                Text("TaskFlow will notify you at this date and time.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
 
                     if let errorMessage {
                         HStack(spacing: 8) {
@@ -218,6 +298,20 @@ struct CreateTaskView: View {
             }
         }
         .tint(Palette.accent)
+        .alert(
+            "Task Saved",
+            isPresented: $showReminderSaveAlert
+        ) {
+            Button("OK") {
+                onCreated()
+                dismiss()
+            }
+        } message: {
+            Text(
+                "Your task was saved, but the reminder could not be scheduled. "
+                    + (reminderSaveError ?? "Please check your notification permissions.")
+            )
+        }
     }
 
     // MARK: - Header: big title + notes, no card, no chrome

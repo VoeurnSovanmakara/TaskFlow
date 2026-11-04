@@ -17,7 +17,8 @@ fun TaskEntity.toDomain(): Task {
         dueDate = dueDate?.let(LocalDate::parse),
         projectId = projectId,
         createdAt = Instant.fromEpochMilliseconds(createdAt),
-        updatedAt = Instant.fromEpochMilliseconds(updatedAt)
+        updatedAt = Instant.fromEpochMilliseconds(updatedAt),
+        reminderAt = reminderAt?.let(Instant::fromEpochMilliseconds)
     )
 }
 
@@ -31,6 +32,7 @@ fun Task.toEntity(): TaskEntity {
         dueDate = dueDate?.toString(),
         projectId = projectId,
         createdAt = createdAt.toEpochMilliseconds(),
-        updatedAt = updatedAt.toEpochMilliseconds()
+        updatedAt = updatedAt.toEpochMilliseconds(),
+        reminderAt = reminderAt?.toEpochMilliseconds()
     )
 }

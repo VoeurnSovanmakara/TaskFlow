@@ -12,5 +12,6 @@ data class Task(
     val dueDate: LocalDate?,
     val projectId: String?,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val reminderAt: Instant? = null
 )

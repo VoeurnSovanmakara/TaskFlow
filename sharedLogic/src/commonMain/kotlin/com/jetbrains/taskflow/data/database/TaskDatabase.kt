@@ -14,7 +14,7 @@ import com.jetbrains.taskflow.data.database.entity.TaskEntity
         TaskEntity::class,
         ProjectEntity::class,
     ],
-    version = 2
+    version = 3
 )
 @ConstructedBy(TaskDatabaseConstructor::class)
 abstract class TaskDatabase : RoomDatabase() {

@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 class TaskCreator(
@@ -24,7 +25,8 @@ class TaskCreator(
         priority: String,
         status: String,
         dueDate: String?,
-        onSuccess: () -> Unit,
+        reminderAt: String?,
+        onSuccess: (String) -> Unit,
         onError: (String) -> Unit
     ) {
         scope.launch {
@@ -42,11 +44,12 @@ class TaskCreator(
                     dueDate = dueDate?.let { LocalDate.parse(it) },
                     projectId = null,
                     createdAt = now,
-                    updatedAt = now
+                    updatedAt = now,
+                    reminderAt = reminderAt?.let { Instant.parse(it) }
                 )
 
                 createTaskUseCase(task)
-                onSuccess()
+                onSuccess(task.id)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
