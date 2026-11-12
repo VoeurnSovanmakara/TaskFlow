@@ -96,6 +96,35 @@ struct TaskDetailView: View {
         return formatter.string(from: date)
     }
 
+    // The reminder, parsed the same way the edit form parses it
+    private var reminderDate: Date? {
+        guard let reminder = task.reminderAt else { return nil }
+
+        let value = String(describing: reminder)
+
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [
+            .withInternetDateTime,
+            .withFractionalSeconds
+        ]
+
+        return formatter.date(from: value)
+            ?? ISO8601DateFormatter().date(from: value)
+    }
+
+    private var reminderText: String? {
+        reminderDate?.formatted(date: .abbreviated, time: .shortened)
+    }
+
+    // Accent while the reminder is still ahead, quiet once it has passed
+    private var reminderColor: Color {
+        guard let reminderDate, reminderDate > Date() else {
+            return .secondary
+        }
+
+        return Palette.accent
+    }
+
     private func formatterDate(_ value: String) -> Date? {
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .iso8601)
@@ -166,8 +195,10 @@ struct TaskDetailView: View {
                     }
                 }
 
+                // Plain rows with a hairline, like the rest of the screen
+                // (no frosted card)
                 section("Details") {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 0) {
                         metadataRow(
                             title: "Created",
                             value: formattedTimestamp(
@@ -176,6 +207,7 @@ struct TaskDetailView: View {
                         )
 
                         Divider()
+                            .padding(.vertical, 12)
 
                         VStack(alignment: .leading, spacing: 6) {
                             metadataRow(
@@ -195,9 +227,6 @@ struct TaskDetailView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                    .padding(20)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
 
                 Button(role: .destructive) {
@@ -208,6 +237,7 @@ struct TaskDetailView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .padding(.top, 8)
+                .disabled(isDeleting)
                 .accessibilityLabel("Delete task")
             }
             .padding(.horizontal, 20)
@@ -221,16 +251,20 @@ struct TaskDetailView: View {
             Button {
                 onEdit()
             } label: {
-                Label("Edit Task", systemImage: "pencil")
-                    .foregroundStyle(Palette.onAccent)
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 14)
-                    .background(Palette.accent, in: Capsule())
-                    .shadow(color: Palette.accent.opacity(0.35), radius: 12, y: 6)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
+                HStack(spacing: 8) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 16, weight: .bold))
+                    Text("Edit Task")
+                        .font(.system(.headline, design: .rounded))
+                }
+                .foregroundStyle(Palette.onAccent)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 14)
+                .background(Palette.accent, in: Capsule())
+                .shadow(color: Palette.accent.opacity(0.35), radius: 12, y: 6)
             }
             .buttonStyle(.plain)
+            .disabled(isDeleting)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
         }
@@ -258,7 +292,7 @@ struct TaskDetailView: View {
                     ProgressView("Deleting task...")
                         .padding(24)
                         .background(.regularMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
             }
         }
@@ -277,7 +311,7 @@ struct TaskDetailView: View {
         }
     }
 
-    // MARK: - Header: tags, big title, due date (no card)
+    // MARK: - Header: tags, big title, due date + reminder (no card)
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -299,10 +333,20 @@ struct TaskDetailView: View {
                 .font(.system(.largeTitle, design: .rounded).weight(.bold))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if let dueDateText {
-                Label(dueDateText, systemImage: "calendar")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Palette.accent)
+            if dueDateText != nil || reminderText != nil {
+                VStack(alignment: .leading, spacing: 8) {
+                    if let dueDateText {
+                        Label(dueDateText, systemImage: "calendar")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Palette.accent)
+                    }
+
+                    if let reminderText {
+                        Label(reminderText, systemImage: "bell.fill")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(reminderColor)
+                    }
+                }
             }
         }
     }

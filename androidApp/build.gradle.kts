@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
     implementation(libs.androidx.navigation.compose)
+    implementation("androidx.core:core-ktx:1.17.0")
 }
 
 android {

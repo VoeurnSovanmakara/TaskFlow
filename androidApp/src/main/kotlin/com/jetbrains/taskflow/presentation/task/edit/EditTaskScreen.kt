@@ -1,5 +1,8 @@
 package com.jetbrains.taskflow.presentation.task.edit
 
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,7 +57,9 @@ import com.jetbrains.taskflow.R
 import com.jetbrains.taskflow.core.util.toDisplayString
 import com.jetbrains.taskflow.domain.model.TaskPriority
 import com.jetbrains.taskflow.domain.model.TaskStatus
+import com.jetbrains.taskflow.notification.TaskReminderScheduler
 import com.jetbrains.taskflow.presentation.share.prettyName
+import com.jetbrains.taskflow.presentation.task.components.TaskReminderSection
 import com.jetbrains.taskflow.presentation.task.edit.components.CardSection
 import com.jetbrains.taskflow.presentation.task.edit.components.HeaderSection
 import kotlinx.datetime.DatePeriod
@@ -66,6 +72,7 @@ import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 
 private val FieldShape = RoundedCornerShape(16.dp)
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskScreen(
@@ -77,6 +84,7 @@ fun EditTaskScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDatePicker by remember { mutableStateOf(false) }
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val context = LocalContext.current
 
     val dueDateInteractionSource = remember { MutableInteractionSource() }
     LaunchedEffect(dueDateInteractionSource) {
@@ -137,7 +145,19 @@ fun EditTaskScreen(
 
                     Button(
                         onClick = {
-                            viewModel.updateTask(taskId = taskId, onSuccess = onTaskUpdated)
+                            viewModel.updateTask(taskId) { task ->
+                                val reminderScheduled = TaskReminderScheduler.sync(context, task)
+
+                                if (!reminderScheduled) {
+                                    Toast.makeText(
+                                        context,
+                                        "Task updated, but the reminder could not be scheduled.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+
+                                onBack()
+                            }
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -204,6 +224,39 @@ fun EditTaskScreen(
                         unfocusedBorderColor = Color.Transparent,
                         focusedBorderColor = Color.Transparent,
                     ),
+                )
+            }
+
+            CardSection {
+                HeaderSection(
+                    text = "DESCRIPTION & NOTES",
+                    icon = painterResource(id = R.drawable.notes),
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = uiState.description,
+                    onValueChange = viewModel::onDescriptionChanged,
+                    placeholder = { Text("Add details or notes...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = Color.Transparent,
+                    ),
+                )
+
+                val wordCount = uiState.description
+                    .trim()
+                    .split(Regex("\\s+"))
+                    .count { it.isNotBlank() }
+
+                Text(
+                    text = "$wordCount words",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
 
@@ -287,38 +340,12 @@ fun EditTaskScreen(
                 }
             }
 
-            CardSection {
-                HeaderSection(
-                    text = "DESCRIPTION & NOTES",
-                    icon = painterResource(id = R.drawable.notes),
-                )
 
-                Spacer(Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = uiState.description,
-                    onValueChange = viewModel::onDescriptionChanged,
-                    placeholder = { Text("Add details or notes...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 4,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Transparent,
-                    ),
-                )
-
-                val wordCount = uiState.description
-                    .trim()
-                    .split(Regex("\\s+"))
-                    .count { it.isNotBlank() }
-
-                Text(
-                    text = "$wordCount words",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
+            TaskReminderSection(
+                reminderAt = uiState.reminderAt,
+                onReminderChanged = viewModel::setReminderAt
+            )
 
             uiState.error?.let { error ->
                 Surface(

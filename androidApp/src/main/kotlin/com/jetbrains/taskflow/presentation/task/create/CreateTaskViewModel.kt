@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
 class CreateTaskViewModel(
@@ -60,9 +61,15 @@ class CreateTaskViewModel(
         }
     }
 
+    fun setReminderAt(reminderAt: Instant?) {
+        _uiState.update {
+            it.copy( reminderAt = reminderAt )
+        }
+    }
+
     @OptIn(ExperimentalUuidApi::class)
     fun createTask(
-        onSuccess: () -> Unit
+        onSuccess: (Task) -> Unit
     ) {
         val state = _uiState.value
 
@@ -95,14 +102,15 @@ class CreateTaskViewModel(
                     dueDate = state.dueDate,
                     projectId = null,
                     createdAt = now,
-                    updatedAt = now
+                    updatedAt = now,
+                    reminderAt = state.reminderAt
                 )
 
                 createTaskUseCase(task)
 
                 _uiState.value = CreateTaskUiState()
 
-                onSuccess()
+                onSuccess(task)
 
             } catch (throwable: Throwable) {
                 _uiState.update {

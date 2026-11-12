@@ -2,6 +2,9 @@
 
 package com.jetbrains.taskflow.presentation.task.create
 
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -58,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,7 +70,9 @@ import com.jetbrains.taskflow.R
 import com.jetbrains.taskflow.core.util.toDisplayString
 import com.jetbrains.taskflow.domain.model.TaskPriority
 import com.jetbrains.taskflow.domain.model.TaskStatus
+import com.jetbrains.taskflow.notification.TaskReminderScheduler
 import com.jetbrains.taskflow.presentation.share.prettyName
+import com.jetbrains.taskflow.presentation.task.components.TaskReminderSection
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -78,6 +84,7 @@ import kotlin.time.Clock
 private val FieldShape = RoundedCornerShape(12.dp)
 private val CardShape = RoundedCornerShape(16.dp)
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTaskScreen(
@@ -88,6 +95,7 @@ fun CreateTaskScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showDatePicker by remember { mutableStateOf(false) }
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val context = LocalContext.current
 
     val dueDateInteractionSource = remember { MutableInteractionSource() }
     LaunchedEffect(dueDateInteractionSource) {
@@ -144,7 +152,19 @@ fun CreateTaskScreen(
 
                     Button(
                         onClick = {
-                            viewModel.createTask(onSuccess = onTaskCreated)
+                            viewModel.createTask { task ->
+                                val reminderScheduled = TaskReminderScheduler.sync(context, task)
+
+                                if (!reminderScheduled) {
+                                    Toast.makeText(
+                                        context,
+                                        "Task saved, but the reminder could not be scheduled.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+
+                                onTaskCreated()
+                            }
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -342,6 +362,11 @@ fun CreateTaskScreen(
                     }
                 }
             }
+
+            TaskReminderSection(
+                reminderAt = state.reminderAt,
+                onReminderChanged = viewModel::setReminderAt
+            )
 
             state.error?.let { error ->
                 Surface(

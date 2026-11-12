@@ -2,6 +2,7 @@ package com.jetbrains.taskflow.presentation.task.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jetbrains.taskflow.domain.model.Task
 import com.jetbrains.taskflow.domain.model.TaskPriority
 import com.jetbrains.taskflow.domain.model.TaskStatus
 import com.jetbrains.taskflow.domain.usecase.GetTaskUseCase
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 class EditTaskViewModel(
     private val getTaskUseCase: GetTaskUseCase,
@@ -54,7 +56,8 @@ class EditTaskViewModel(
                         priority = task.priority,
                         status = task.status,
                         dueDate = task.dueDate,
-                        error = null
+                        error = null,
+                        reminderAt = task.reminderAt,
                     )
                 }
 
@@ -99,9 +102,15 @@ class EditTaskViewModel(
         }
     }
 
+    fun setReminderAt(reminderAt: Instant?) {
+        _uiState.update {
+            it.copy(reminderAt = reminderAt)
+        }
+    }
+
     fun updateTask(
         taskId: String,
-        onSuccess: () -> Unit
+        onSuccess: (Task) -> Unit
     ) {
         viewModelScope.launch {
 
@@ -132,6 +141,7 @@ class EditTaskViewModel(
                     status = _uiState.value.status,
                     priority = _uiState.value.priority,
                     dueDate = _uiState.value.dueDate,
+                    reminderAt = _uiState.value.reminderAt,
                     updatedAt = Clock.System.now()
                 )
 
@@ -141,7 +151,7 @@ class EditTaskViewModel(
                     it.copy(isSaving = false)
                 }
 
-                onSuccess()
+                onSuccess(updatedTask)
 
             } catch (e: Exception) {
                 _uiState.update {
