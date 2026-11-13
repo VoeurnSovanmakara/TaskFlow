@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,6 +50,7 @@ import com.jetbrains.taskflow.R
 import com.jetbrains.taskflow.core.util.dateTimeFormatter
 import com.jetbrains.taskflow.core.util.formatTimeAgo
 import com.jetbrains.taskflow.core.util.toDisplayString
+import com.jetbrains.taskflow.notification.TaskReminderScheduler
 import com.jetbrains.taskflow.presentation.task.list.components.DeadlineBadge
 import com.jetbrains.taskflow.presentation.share.PriorityBadge
 import com.jetbrains.taskflow.presentation.share.StatusBadge
@@ -74,6 +76,7 @@ fun TaskDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
     val scheme = MaterialTheme.colorScheme
+    val context = LocalContext.current.applicationContext
 
     LaunchedEffect(taskId) {
         viewModel.loadTask(taskId)
@@ -347,7 +350,14 @@ fun TaskDetailScreen(
                     showDeleteDialog = false
                     viewModel.deleteTask(
                         taskId = task.id,
-                        onSuccess = onDelete
+                        onSuccess = {
+                            TaskReminderScheduler.cancel(
+                                context = context,
+                                taskId = task.id
+                            )
+
+                            onDelete()
+                        }
                     )
                 },
                 onDismiss = {

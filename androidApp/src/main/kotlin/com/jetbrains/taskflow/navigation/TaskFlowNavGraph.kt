@@ -1,6 +1,9 @@
 package com.jetbrains.taskflow.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -27,8 +30,12 @@ private object Routes {
     const val EDIT_TASK_BASE = "edit_task"
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TaskFlowNavGraph() {
+fun TaskFlowNavGraph(
+    initialTaskId: String? = null,
+    onTaskNavigationHandled: () -> Unit = {}
+) {
 
     val navController = rememberNavController()
 
@@ -44,6 +51,21 @@ fun TaskFlowNavGraph() {
         taskDetailDestination(navController)
 
         editTaskDestination(navController)
+    }
+
+    LaunchedEffect(initialTaskId) {
+        initialTaskId?.let { taskId ->
+            navController.navigate(
+                "${Routes.TASK_DETAIL_BASE}/$taskId"
+            ) {
+                popUpTo(Routes.TASK_LIST) {
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
+
+            onTaskNavigationHandled()
+        }
     }
 }
 
@@ -70,6 +92,7 @@ private fun NavGraphBuilder.taskListDestination(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun NavGraphBuilder.createTaskDestination(
     navController: NavHostController
 ) {
@@ -125,6 +148,7 @@ private fun NavGraphBuilder.taskDetailDestination(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun NavGraphBuilder.editTaskDestination(
     navController: NavHostController
 ) {
